@@ -133127,7 +133127,7 @@ const services = {
 };
 mockAuthService.login("https://sandbox.crm.dynamics.com");
 function SandboxApp() {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Provider_default, { store, children: /* @__PURE__ */ jsxRuntimeExports.jsx(ServiceProvider, { services, children: /* @__PURE__ */ jsxRuntimeExports.jsx(BrowserRouter, { basename: "/".replace(/\/$/, ""), children: /* @__PURE__ */ jsxRuntimeExports.jsx(Routes, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(Provider_default, { store, children: /* @__PURE__ */ jsxRuntimeExports.jsx(ServiceProvider, { services, children: /* @__PURE__ */ jsxRuntimeExports.jsx(BrowserRouter, { basename: "/rta-dashboard-demo", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Routes, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
     Route,
     {
       path: "/*",
@@ -133145,4 +133145,3 @@ console.log(
   "%c🧪 SANDBOX MODE — Using mock data, no Azure AD auth required",
   "color: #10b981; font-weight: bold; font-size: 14px;"
 );
-
