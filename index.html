@@ -1,0 +1,821 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Realtime analytics demo dashboard for contact center wallboard scenarios." />
+    <title>RTA Dashboard - Sandbox</title>
+    <script>
+      (() => {
+        const param = new URLSearchParams(window.location.search).get("scoutTheme");
+        const theme =
+          param || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+        document.documentElement.setAttribute("data-theme", theme);
+      })();
+    </script>
+    <style>
+      :root {
+        color-scheme: light;
+        --cp-bg: #f7f4ef;
+        --cp-bg-elevated: #fcfbf8;
+        --cp-surface: #ffffff;
+        --cp-surface-soft: #f5f5f5;
+        --cp-border: #dedede;
+        --cp-border-strong: #919191;
+        --cp-text: #242424;
+        --cp-text-muted: #5c5c5c;
+        --cp-text-soft: #6f6f6f;
+        --cp-accent: #b11f4b;
+        --cp-accent-hover: #9a1a41;
+        --cp-accent-soft: rgba(177, 31, 75, 0.08);
+        --cp-accent-fg: #ffffff;
+        --cp-success: #16a34a;
+        --cp-danger: #dc2626;
+        --cp-warning: #f59e0b;
+        --cp-link: #0078d4;
+        --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.12);
+        --cp-overlay: rgba(255, 255, 255, 0.8);
+        --cp-panel: rgba(255, 255, 255, 0.86);
+        --cp-panel-strong: rgba(255, 255, 255, 0.96);
+        --cp-sheen: rgba(255, 255, 255, 0.55);
+        --cp-highlight: rgba(177, 31, 75, 0.12);
+      }
+      html[data-theme="dark"] {
+        color-scheme: dark;
+        --cp-bg: #3d3b3a;
+        --cp-bg-elevated: #343231;
+        --cp-surface: #292929;
+        --cp-surface-soft: #2e2e2e;
+        --cp-border: #474747;
+        --cp-border-strong: #5f5f5f;
+        --cp-text: #dedede;
+        --cp-text-muted: #919191;
+        --cp-text-soft: #b0b0b0;
+        --cp-accent: #fd8ea1;
+        --cp-accent-hover: #fb7b91;
+        --cp-accent-soft: rgba(253, 142, 161, 0.14);
+        --cp-accent-fg: #1a1a1a;
+        --cp-success: #4ade80;
+        --cp-danger: #f87171;
+        --cp-warning: #fbbf24;
+        --cp-link: #4da6ff;
+        --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
+        --cp-overlay: rgba(41, 41, 41, 0.88);
+        --cp-panel: rgba(41, 41, 41, 0.72);
+        --cp-panel-strong: rgba(41, 41, 41, 0.96);
+        --cp-sheen: rgba(255, 255, 255, 0.04);
+        --cp-highlight: rgba(253, 142, 161, 0.12);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: var(--cp-bg);
+        color: var(--cp-text);
+        font-family: "Segoe UI", Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif;
+      }
+
+      button,
+      select {
+        font: inherit;
+      }
+
+      .app {
+        display: grid;
+        grid-template-columns: 248px minmax(0, 1fr);
+        min-height: 100vh;
+      }
+
+      .sidebar {
+        background: var(--cp-bg-elevated);
+        border-right: 1px solid var(--cp-border);
+        padding: 20px 16px;
+        position: sticky;
+        top: 0;
+        height: 100vh;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 28px;
+      }
+
+      .logo {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        background: var(--cp-accent);
+        color: var(--cp-accent-fg);
+        display: grid;
+        place-items: center;
+        font-weight: 700;
+      }
+
+      .brand-title {
+        font-size: 18px;
+        font-weight: 700;
+        line-height: 1.2;
+      }
+
+      .brand-subtitle {
+        color: var(--cp-text-muted);
+        font-size: 12px;
+        margin-top: 2px;
+      }
+
+      .nav-group {
+        margin: 22px 0;
+      }
+
+      .nav-label {
+        color: var(--cp-text-soft);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin: 0 8px 8px;
+      }
+
+      .nav-item {
+        width: 100%;
+        border: 0;
+        color: var(--cp-text);
+        background: transparent;
+        border-radius: 0.625rem;
+        padding: 10px 12px;
+        text-align: left;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        cursor: pointer;
+      }
+
+      .nav-item.active,
+      .nav-item:hover {
+        background: var(--cp-accent-soft);
+        color: var(--cp-accent);
+      }
+
+      .main {
+        padding: 24px;
+        min-width: 0;
+      }
+
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        align-items: flex-start;
+        margin-bottom: 18px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(28px, 4vw, 44px);
+        line-height: 1;
+      }
+
+      .subtitle {
+        color: var(--cp-text-muted);
+        margin-top: 8px;
+      }
+
+      .actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+
+      .button {
+        border: 1px solid var(--cp-border);
+        background: var(--cp-surface);
+        color: var(--cp-text);
+        padding: 9px 12px;
+        border-radius: 0.625rem;
+        cursor: pointer;
+        box-shadow: 0 0 2px var(--cp-overlay), 0 1px 2px var(--cp-overlay);
+      }
+
+      .button.primary {
+        background: var(--cp-accent);
+        border-color: var(--cp-accent);
+        color: var(--cp-accent-fg);
+      }
+
+      .filters {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(160px, 1fr));
+        gap: 12px;
+        background: var(--cp-panel-strong);
+        border: 1px solid var(--cp-border);
+        border-radius: 16px;
+        padding: 16px;
+        box-shadow: 0 0 2px var(--cp-overlay), 0 1px 2px var(--cp-overlay);
+        margin-bottom: 18px;
+      }
+
+      label {
+        display: grid;
+        gap: 6px;
+        color: var(--cp-text-muted);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      select {
+        border: 1px solid var(--cp-border);
+        border-radius: 0.625rem;
+        padding: 9px 10px;
+        background: var(--cp-surface);
+        color: var(--cp-text);
+      }
+
+      .notice {
+        grid-column: 1 / -1;
+        border: 1px solid var(--cp-border);
+        background: var(--cp-surface-soft);
+        color: var(--cp-text-muted);
+        border-radius: 0.625rem;
+        padding: 10px 12px;
+        font-size: 13px;
+      }
+
+      .wallboard-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: center;
+        margin: 22px 0 12px;
+      }
+
+      .wallboard-title {
+        font-size: 22px;
+        font-weight: 700;
+      }
+
+      .wallboard-context {
+        color: var(--cp-text-muted);
+        font-size: 13px;
+        margin-top: 4px;
+      }
+
+      .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(190px, 1fr));
+        gap: 14px;
+      }
+
+      .card {
+        background: var(--cp-surface);
+        border: 1px solid var(--cp-border);
+        border-radius: 16px;
+        padding: 16px;
+        box-shadow: 0 0 2px var(--cp-overlay), 0 1px 2px var(--cp-overlay);
+        min-width: 0;
+      }
+
+      .kpi {
+        min-height: 144px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+
+      .card-title {
+        color: var(--cp-text-muted);
+        font-weight: 700;
+        font-size: 13px;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        border-radius: 999px;
+        padding: 3px 8px;
+        font-size: 11px;
+        font-weight: 700;
+        background: var(--cp-surface-soft);
+        color: var(--cp-text-muted);
+        margin-left: 6px;
+      }
+
+      .badge.critical {
+        background: var(--cp-accent-soft);
+        color: var(--cp-danger);
+      }
+
+      .kpi-value {
+        font-size: 40px;
+        line-height: 1;
+        font-weight: 750;
+        letter-spacing: -0.04em;
+        margin: 14px 0 8px;
+      }
+
+      .kpi-value.time {
+        font-variant-numeric: tabular-nums;
+      }
+
+      .split {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      .split-item {
+        border-radius: 0.625rem;
+        border: 1px solid var(--cp-border);
+        background: var(--cp-surface-soft);
+        padding: 10px;
+      }
+
+      .mini-label {
+        color: var(--cp-text-muted);
+        font-size: 12px;
+      }
+
+      .mini-value {
+        font-size: 22px;
+        font-weight: 700;
+        margin-top: 2px;
+      }
+
+      .delta {
+        color: var(--cp-text-muted);
+        font-size: 13px;
+        display: flex;
+        gap: 6px;
+        align-items: center;
+      }
+
+      .delta.up {
+        color: var(--cp-success);
+      }
+
+      .delta.down {
+        color: var(--cp-danger);
+      }
+
+      .dashboard-grid {
+        display: grid;
+        grid-template-columns: 1.2fr 1fr;
+        gap: 14px;
+        margin-top: 14px;
+      }
+
+      .panel-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 14px;
+        font-weight: 700;
+      }
+
+      .bars {
+        display: grid;
+        gap: 10px;
+      }
+
+      .bar-row {
+        display: grid;
+        grid-template-columns: 130px minmax(0, 1fr) 34px;
+        gap: 10px;
+        align-items: center;
+        font-size: 13px;
+      }
+
+      .bar-track {
+        height: 10px;
+        border-radius: 999px;
+        background: var(--cp-surface-soft);
+        overflow: hidden;
+      }
+
+      .bar {
+        height: 100%;
+        width: var(--value);
+        background: var(--cp-accent);
+        border-radius: inherit;
+      }
+
+      .chart {
+        height: 226px;
+        display: grid;
+        align-items: end;
+        grid-template-columns: repeat(12, 1fr);
+        gap: 8px;
+        border-bottom: 1px solid var(--cp-border);
+        padding-top: 16px;
+      }
+
+      .col {
+        height: var(--h);
+        min-height: 16px;
+        background: var(--cp-accent-soft);
+        border: 1px solid var(--cp-border);
+        border-bottom: 0;
+        border-radius: 0.625rem 0.625rem 0 0;
+        position: relative;
+      }
+
+      .col::after {
+        content: "";
+        position: absolute;
+        inset: auto 0 0;
+        height: var(--answered);
+        background: var(--cp-accent);
+        border-radius: inherit;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+
+      th,
+      td {
+        padding: 11px 8px;
+        border-bottom: 1px solid var(--cp-border);
+        text-align: left;
+        white-space: nowrap;
+      }
+
+      th {
+        color: var(--cp-text-muted);
+        font-weight: 700;
+      }
+
+      .status {
+        color: var(--cp-success);
+        font-weight: 700;
+      }
+
+      .status.warn {
+        color: var(--cp-warning);
+      }
+
+      .status.danger {
+        color: var(--cp-danger);
+      }
+
+      .time-card {
+        text-align: center;
+      }
+
+      .clock {
+        font-size: 30px;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .clock small {
+        display: block;
+        color: var(--cp-text-muted);
+        font-size: 12px;
+        font-weight: 600;
+        margin-top: 4px;
+      }
+
+      @media (max-width: 1180px) {
+        .app {
+          grid-template-columns: 1fr;
+        }
+        .sidebar {
+          position: static;
+          height: auto;
+          border-right: 0;
+          border-bottom: 1px solid var(--cp-border);
+        }
+        .nav-group {
+          display: inline-grid;
+          min-width: 210px;
+          margin-right: 12px;
+          vertical-align: top;
+        }
+        .kpi-grid,
+        .filters,
+        .dashboard-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 720px) {
+        .main {
+          padding: 16px;
+        }
+        .topbar,
+        .wallboard-header {
+          flex-direction: column;
+        }
+        .filters,
+        .kpi-grid,
+        .dashboard-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="logo">RTA</div>
+          <div>
+            <div class="brand-title">Real time streaming analytics</div>
+            <div class="brand-subtitle">Sandbox dashboard</div>
+          </div>
+        </div>
+
+        <div class="nav-group">
+          <div class="nav-label">Configure</div>
+          <button class="nav-item active">Wallboard <span>01</span></button>
+          <button class="nav-item">Operations summary <span>02</span></button>
+          <button class="nav-item">Queues <span>03</span></button>
+          <button class="nav-item">Representatives <span>04</span></button>
+          <button class="nav-item">Conversations <span>05</span></button>
+        </div>
+
+        <div class="nav-group">
+          <div class="nav-label">Filters</div>
+          <button class="nav-item">Customise <span>+</span></button>
+          <button class="nav-item">Saved views <span>3</span></button>
+        </div>
+      </aside>
+
+      <main class="main">
+        <div class="topbar">
+          <div>
+            <h1>Wallboard</h1>
+            <div class="subtitle" id="contextLine">For Last 15 min | Channel: All | BU: All | Queues: All</div>
+          </div>
+          <div class="actions">
+            <button class="button" id="themeToggle">Toggle theme</button>
+            <button class="button primary" id="fullscreen">Full Screen</button>
+          </div>
+        </div>
+
+        <section class="filters" aria-label="Dashboard filters">
+          <label>
+            Period:
+            <select id="period">
+              <option>Last 15 min</option>
+              <option>Last 30 min</option>
+              <option>Last 1 hour</option>
+              <option>Today</option>
+            </select>
+          </label>
+          <label>
+            Channel:
+            <select id="channel">
+              <option>All</option>
+              <option>Voice</option>
+              <option>Chat</option>
+              <option>Messaging</option>
+            </select>
+          </label>
+          <label>
+            Business unit:
+            <select id="businessUnit">
+              <option>All</option>
+              <option>Retail contact center</option>
+              <option>Corporate support</option>
+              <option>Digital service desk</option>
+            </select>
+          </label>
+          <label>
+            Queues:
+            <select id="queue">
+              <option>All</option>
+              <option>General inquiries</option>
+              <option>Complaints</option>
+              <option>Priority customers</option>
+            </select>
+          </label>
+          <div class="notice">Live metrics ignore the time filter. They update only with Channel, Business unit, Queue, and other non-time filters.</div>
+        </section>
+
+        <div class="wallboard-header">
+          <div>
+            <div class="wallboard-title">Live operations dashboard</div>
+            <div class="wallboard-context">A clean-room public demo version using generated sample metrics.</div>
+          </div>
+          <div class="card time-card">
+            <div class="clock" id="clock">--:--<small>Local time</small></div>
+          </div>
+        </div>
+
+        <section class="kpi-grid" aria-label="Key performance indicators">
+          <article class="card kpi">
+            <div>
+              <div class="card-title">Active conversations <span class="badge">Live</span></div>
+              <div class="kpi-value" id="activeConversations">39</div>
+              <div class="split">
+                <div class="split-item"><div class="mini-label">With Representative</div><div class="mini-value">11</div></div>
+                <div class="split-item"><div class="mini-label">With virtual agents</div><div class="mini-value">7</div></div>
+              </div>
+            </div>
+            <div class="delta up">up 12%</div>
+          </article>
+
+          <article class="card kpi">
+            <div>
+              <div class="card-title">Online Representatives <span class="badge">Live</span></div>
+              <div class="kpi-value" id="onlineReps">9</div>
+              <div class="mini-label">Available across live channels</div>
+            </div>
+            <div class="delta down">down 3s</div>
+          </article>
+
+          <article class="card kpi">
+            <div>
+              <div class="card-title">Conversations in queue <span class="badge critical">Critical</span></div>
+              <div class="kpi-value" id="queueCount">3</div>
+              <div class="mini-label">Conversations pending assignment</div>
+            </div>
+            <div class="delta up">up +0</div>
+          </article>
+
+          <article class="card kpi">
+            <div>
+              <div class="card-title">Current Longest Wait time <span class="badge">Live</span></div>
+              <div class="kpi-value time" id="longestWait">04:32</div>
+              <div class="mini-label">mm:ss</div>
+            </div>
+            <div class="delta down">down 13s</div>
+          </article>
+
+          <article class="card kpi">
+            <div>
+              <div class="card-title">Service level</div>
+              <div class="kpi-value" id="serviceLevel">96%</div>
+              <div class="mini-label">216/225 answered within 20 sec</div>
+            </div>
+            <div class="delta down">down 1%</div>
+          </article>
+
+          <article class="card kpi">
+            <div>
+              <div class="card-title">Abandon rate <span class="badge critical">Critical</span></div>
+              <div class="kpi-value" id="abandonRate">6.3%</div>
+              <div class="mini-label">5/79 customer abandons</div>
+            </div>
+            <div class="delta down">down 0.5%</div>
+          </article>
+
+          <article class="card kpi">
+            <div>
+              <div class="card-title">Avg. Speed to answer</div>
+              <div class="kpi-value time" id="asa">00:21</div>
+              <div class="mini-label">mm:ss</div>
+            </div>
+            <div class="delta down">down 4s</div>
+          </article>
+
+          <article class="card kpi">
+            <div>
+              <div class="card-title">Avg Handle time</div>
+              <div class="kpi-value time" id="aht">07:00</div>
+              <div class="mini-label">mm:ss</div>
+            </div>
+            <div class="delta down">down 13s</div>
+          </article>
+        </section>
+
+        <section class="dashboard-grid">
+          <article class="card">
+            <div class="panel-title">Rep Presence Distribution <span class="badge">Live</span></div>
+            <div class="bars" id="presenceBars"></div>
+          </article>
+
+          <article class="card">
+            <div class="panel-title">Conversation trend <span class="badge">Last 15 min</span></div>
+            <div class="chart" aria-label="Conversation trend chart">
+              <div class="col" style="--h: 44%; --answered: 66%"></div>
+              <div class="col" style="--h: 58%; --answered: 72%"></div>
+              <div class="col" style="--h: 49%; --answered: 70%"></div>
+              <div class="col" style="--h: 72%; --answered: 81%"></div>
+              <div class="col" style="--h: 62%; --answered: 76%"></div>
+              <div class="col" style="--h: 80%; --answered: 83%"></div>
+              <div class="col" style="--h: 68%; --answered: 74%"></div>
+              <div class="col" style="--h: 86%; --answered: 78%"></div>
+              <div class="col" style="--h: 73%; --answered: 77%"></div>
+              <div class="col" style="--h: 92%; --answered: 82%"></div>
+              <div class="col" style="--h: 70%; --answered: 76%"></div>
+              <div class="col" style="--h: 64%; --answered: 73%"></div>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="panel-title">Queue health</div>
+            <table>
+              <thead>
+                <tr><th>Queue</th><th>Waiting</th><th>Longest wait</th><th>Status</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>General inquiries</td><td>1</td><td>01:12</td><td class="status">Healthy</td></tr>
+                <tr><td>Priority customers</td><td>0</td><td>00:00</td><td class="status">Healthy</td></tr>
+                <tr><td>Complaints</td><td>2</td><td>04:32</td><td class="status danger">Critical</td></tr>
+                <tr><td>Digital service desk</td><td>0</td><td>00:18</td><td class="status warn">Watch</td></tr>
+              </tbody>
+            </table>
+          </article>
+
+          <article class="card">
+            <div class="panel-title">Representative activity</div>
+            <table>
+              <thead>
+                <tr><th>Representative</th><th>Presence</th><th>Active</th><th>AHT</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Amina S.</td><td>Available</td><td>2</td><td>06:40</td></tr>
+                <tr><td>Omar K.</td><td>Busy</td><td>3</td><td>07:12</td></tr>
+                <tr><td>Lina M.</td><td>In training</td><td>1</td><td>05:58</td></tr>
+                <tr><td>Ravi P.</td><td>On break</td><td>0</td><td>--</td></tr>
+              </tbody>
+            </table>
+          </article>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      const presence = [
+        ["Available", 4],
+        ["Busy", 1],
+        ["Busy - DND", 1],
+        ["Busy - On lunch", 1],
+        ["Busy - In training", 1],
+        ["Busy - Meeting", 1],
+        ["Busy - On break", 1],
+        ["Away", 1],
+        ["Away - Idle", 1],
+        ["Away - BRB", 1],
+        ["Offline", 1],
+      ];
+
+      const byId = (id) => document.getElementById(id);
+      const pad = (value) => String(value).padStart(2, "0");
+      const formatDuration = (seconds) => `${pad(Math.floor(seconds / 60))}:${pad(seconds % 60)}`;
+
+      function renderPresence() {
+        const max = Math.max(...presence.map(([, value]) => value));
+        byId("presenceBars").innerHTML = presence
+          .map(([label, value]) => `
+            <div class="bar-row">
+              <span>${label}</span>
+              <span class="bar-track"><span class="bar" style="--value: ${(value / max) * 100}%"></span></span>
+              <strong>${value}</strong>
+            </div>
+          `)
+          .join("");
+      }
+
+      function updateClock() {
+        const now = new Date();
+        byId("clock").innerHTML = `${pad(now.getHours())}:${pad(now.getMinutes())}<small>Local time</small>`;
+      }
+
+      function updateContext() {
+        byId("contextLine").textContent = `For ${byId("period").value} | Channel: ${byId("channel").value} | BU: ${byId("businessUnit").value} | Queues: ${byId("queue").value}`;
+      }
+
+      function updateLiveMetrics() {
+        const t = Date.now() / 1000;
+        byId("activeConversations").textContent = 39 + Math.round(Math.sin(t / 9) * 2);
+        byId("onlineReps").textContent = 9 + Math.max(0, Math.round(Math.sin(t / 21)));
+        byId("queueCount").textContent = 3 + Math.max(0, Math.round(Math.sin(t / 14)));
+        byId("longestWait").textContent = formatDuration(272 + Math.round(Math.sin(t / 6) * 15));
+        byId("serviceLevel").textContent = `${96 + Math.round(Math.sin(t / 19))}%`;
+        byId("abandonRate").textContent = `${(6.3 + Math.sin(t / 15) * 0.3).toFixed(1)}%`;
+        byId("asa").textContent = formatDuration(21 + Math.round(Math.sin(t / 8) * 4));
+        byId("aht").textContent = formatDuration(420 + Math.round(Math.sin(t / 10) * 13));
+      }
+
+      document.querySelectorAll("select").forEach((select) => select.addEventListener("change", updateContext));
+      byId("themeToggle").addEventListener("click", () => {
+        const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+        document.documentElement.setAttribute("data-theme", next);
+      });
+      byId("fullscreen").addEventListener("click", () => {
+        if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+        else document.exitFullscreen();
+      });
+
+      renderPresence();
+      updateContext();
+      updateClock();
+      updateLiveMetrics();
+      setInterval(updateClock, 1000);
+      setInterval(updateLiveMetrics, 3000);
+    </script>
+  </body>
+</html>
